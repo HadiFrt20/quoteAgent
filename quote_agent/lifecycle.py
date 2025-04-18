@@ -16,8 +16,17 @@ CUSTOMER_ID = 25
 CHANNEL_ID = 1
 
 
-def deep_print(obj, indent=0):
+def deep_print(obj, indent=0, visited=None):
+    if visited is None:
+        visited = set()
+    
+    obj_id = id(obj)
+    if obj_id in visited:
+        return
+    
+    visited.add(obj_id)
     spacer = "  " * indent
+    
     if hasattr(obj, '__dict__'):
         print(f"{spacer}{obj.__class__.__name__}:")
         for key, value in vars(obj).items():
@@ -27,7 +36,7 @@ def deep_print(obj, indent=0):
                 print(value)
             else:
                 print()
-                deep_print(value, indent + 2)
+                deep_print(value, indent + 2, visited)
     else:
         print(f"{spacer}{obj}")
 
