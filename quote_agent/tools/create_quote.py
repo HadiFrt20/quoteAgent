@@ -18,14 +18,12 @@ class ProductInput(BaseModel):
 class CombinedQuoteArgs(BaseModel):
     products: List[ProductInput]
     note: str
-    discount_percent: float  # ✅ NEW: Accept discount percent from input
+    discount_percent: float
 
 
-def create_combined_quote_request_tool_func(
-        products: List[dict],
-        note: str,
-        discount_percent: float,  # ✅ NEW: Accept as argument
-        tool_context: ToolContext) -> dict:
+def create_combined_quote_request_tool_func(products: List[dict], note: str,
+                                            discount_percent: float,
+                                            tool_context: ToolContext) -> dict:
     # manually create model
     try:
         args = CombinedQuoteArgs(
@@ -57,8 +55,7 @@ def create_combined_quote_request_tool_func(
             }
 
         base_price = float(product["price"])
-        discount_amount = round(base_price * (args.discount_percent / 100),
-                                2)  # ✅ updated
+        discount_amount = round(base_price * (args.discount_percent / 100), 2)
         offered_price = round(base_price - discount_amount, 2)
         line_subtotal = base_price * quantity
         line_discount = discount_amount * quantity
@@ -91,7 +88,7 @@ def create_combined_quote_request_tool_func(
         "subtotal": round(subtotal, 2),
         "discount": round(total_discount, 2),
         "grandTotal": grand_total,
-        "userEmail": "salestaff_1@senatorgroup.com",
+        "userEmail": "liam.hartman@suppliesco.com",
         "companyId": 2164075,
         "storeHash": STORE_HASH,
         "currency": {
