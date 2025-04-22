@@ -18,14 +18,20 @@ class ProductInput(BaseModel):
 class CombinedQuoteArgs(BaseModel):
     products: List[ProductInput]
     note: str
+    discount_percent: float  # ✅ NEW: Accept discount percent from input
 
 
-def create_combined_quote_request_tool_func(products: List[dict], note: str,
-                                            tool_context: ToolContext) -> dict:
+def create_combined_quote_request_tool_func(
+        products: List[dict],
+        note: str,
+        discount_percent: float,  # ✅ NEW: Accept as argument
+        tool_context: ToolContext) -> dict:
     # manually create model
     try:
         args = CombinedQuoteArgs(
-            products=[ProductInput(**p) for p in products], note=note)
+            products=[ProductInput(**p) for p in products],
+            note=note,
+            discount_percent=discount_percent)
     except Exception as e:
         return {"status": "error", "message": f"Invalid input format: {e}"}
 
@@ -51,8 +57,8 @@ def create_combined_quote_request_tool_func(products: List[dict], note: str,
             }
 
         base_price = float(product["price"])
-        discount_percent = 0.20
-        discount_amount = round(base_price * discount_percent, 2)
+        discount_amount = round(base_price * (args.discount_percent / 100),
+                                2)  # ✅ updated
         offered_price = round(base_price - discount_amount, 2)
         line_subtotal = base_price * quantity
         line_discount = discount_amount * quantity
