@@ -4,7 +4,7 @@ from google.adk.agents import Agent
 from google.adk.tools import ToolContext, FunctionTool
 from google.adk.tools.agent_tool import AgentTool
 from quote_agent.prompts import upsell_instructions, suggest_bundle_instructions
-from quote_agent.tools.catalog import search_catalog_memory_tool
+from quote_agent.tools.catalog import search_catalog_memory_tool, get_price_by_product_id_tool
 from difflib import get_close_matches
 
 
@@ -69,17 +69,21 @@ should_offer_bundle_agent = Agent(
     instruction=upsell_instructions,
 )
 
+find_product_id_by_name_tool = FunctionTool(func=find_product_id_by_name)
+
 suggest_bundle_agent = Agent(
     name="suggest_bundle_agent",
     model="gemini-2.0-flash",
     description=
     "Suggests persuasive bundles using user message and catalog metadata.",
     instruction=suggest_bundle_instructions,
-    tools=[search_catalog_memory_tool])
+    tools=[
+        search_catalog_memory_tool, find_product_id_by_name_tool,
+        get_price_by_product_id_tool
+    ])
 
 should_offer_bundle_tool = AgentTool(agent=should_offer_bundle_agent)
 suggest_bundle_tool = AgentTool(agent=suggest_bundle_agent)
-find_product_id_by_name_tool = FunctionTool(func=find_product_id_by_name)
 
 __all__ = [
     "should_offer_bundle_tool",
