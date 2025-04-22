@@ -126,7 +126,6 @@ def get_order_products(tool_context: ToolContext) -> Content:
             return Content(role="user",
                            parts=[Part(text="No products found.")])
 
-        # Get product details from Storefront API
         product_ids = [
             int(p["productId"]) for p in products if p.get("productId")
         ]
@@ -217,7 +216,6 @@ def get_order_products_by_ids(order_ids: List[int],
             if p.get("productId"):
                 storefront_ids.add(int(p["productId"]))
 
-    # Fetch metadata from Storefront
     fragments = [
         f"""
         p{pid}: product(entityId: {pid}) {{
@@ -324,7 +322,7 @@ def get_order_history(tool_context: CallbackContext) -> Dict:
                 dt = datetime.utcfromtimestamp(ts)
                 o["createdAt"] = format_datetime(dt)
             except Exception:
-                pass  # Leave as-is if conversion fails
+                pass
 
         tool_context.state["order_history"] = orders
         summary = "\n".join(
@@ -363,25 +361,22 @@ resolve_order_ids_tool = FunctionTool(func=read_order_history_from_state)
 def resolve_order_ids_from_input(input_text: str,
                                  tool_context: ToolContext) -> Optional[dict]:
     history = tool_context.state.get("order_history", [])
-    all_ids = [int(o["orderId"]) for o in history]  # most recent first
+    all_ids = [int(o["orderId"]) for o in history]
     input_text = input_text.lower()
 
     if "all" in input_text:
         return {"order_ids": all_ids}
 
-    # ✅ Handles: "last 3", "last 5 orders", etc.
     match = re.search(r"last\s+(\d+)", input_text)
     if match:
         count = int(match.group(1))
         return {"order_ids": all_ids[:count]}
 
-    # ✅ Handles: "orders 210-214" or "orders 210 to 214"
     match = re.search(r"orders?\s+(\d+)\s*[-to]+\s*(\d+)", input_text)
     if match:
         start, end = int(match.group(1)), int(match.group(2))
         return {"order_ids": [oid for oid in all_ids if start <= oid <= end]}
 
-    # ✅ Fallback: grab numbers like "210", "212"
     ids = [int(num) for num in re.findall(r"\d+", input_text)]
     return {"order_ids": [oid for oid in all_ids if oid in ids]}
 

@@ -22,7 +22,7 @@ class CombinedQuoteArgs(BaseModel):
 
 def create_combined_quote_request_tool_func(products: List[dict], note: str,
                                             tool_context: ToolContext) -> dict:
-    # ✅ Manually construct Pydantic model from raw dicts
+    # manually create model
     try:
         args = CombinedQuoteArgs(
             products=[ProductInput(**p) for p in products], note=note)
@@ -97,9 +97,9 @@ def create_combined_quote_request_tool_func(products: List[dict], note: str,
             "thousandsToken": ","
         },
         "contactInfo": {
-            "name": "Admin MKM",
-            "email": "admin@glfstore.co.uk",
-            "companyName": "MKM",
+            "name": "Sophie Randle",
+            "email": "admin@mkmechanical.co.uk",
+            "companyName": "MK Mechanical Solutions",
             "phoneNumber": "0123456789"
         },
         "channelId": 1,

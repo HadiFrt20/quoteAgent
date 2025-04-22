@@ -1,5 +1,5 @@
 from google.adk.agents import LlmAgent
-from quote_agent.prompts import intent_instructions
+#from quote_agent.prompts import intent_instructions
 from google.adk.agents.callback_context import CallbackContext
 
 INTENT_LABELS = [
@@ -12,5 +12,5 @@ intent_agent = LlmAgent(
     model="gemini-2.0-flash",
     description=
     "Classifies user intent for routing (e.g. reorder, bundle, quote).",
-    instruction=(intent_instructions),
+    instruction="",
     output_key="user_intent")

@@ -8,7 +8,6 @@ from quote_agent.tools.catalog import search_catalog_memory_tool
 from difflib import get_close_matches
 
 
-# 🏷️ Label helper (optional for UI or display)
 def get_bundle_label(value: str | None) -> str:
     return {
         "Structural Essentials": "🧱 Structural Kit",
@@ -19,7 +18,6 @@ def get_bundle_label(value: str | None) -> str:
     }.get(value or "", "📦 Suggested Bundle")
 
 
-# 🔍 Map SKUs → Product IDs using catalog
 def map_skus_to_product_ids(catalog: List[Dict], skus: List[str]) -> List[int]:
     sku_lookup = {p["sku"]: p["id"] for p in catalog}
     return [sku_lookup[sku] for sku in skus if sku in sku_lookup]
@@ -29,12 +27,11 @@ def find_product_id_by_name(name: str, tool_context: ToolContext) -> dict:
     catalog = tool_context.state.get("catalog", [])
     name_lower = name.lower()
 
-    # First: strong substring match
     for p in catalog:
         if name_lower in p.get("name", "").lower():
             return {"product_id": p["id"], "matched_name": p["name"]}
 
-    # Second: fuzzy title match using difflib
+    #fuzzy title match
     names = [p["name"] for p in catalog]
     matches = get_close_matches(name, names, n=1, cutoff=0.6)
     if matches:
@@ -48,7 +45,6 @@ def find_product_id_by_name(name: str, tool_context: ToolContext) -> dict:
     return {"error": f"No matching product found for '{name}'"}
 
 
-# 🧠 LLM model input
 class ShouldOfferBundleArgs(BaseModel):
     product_ids: List[int]
     user_text: str
@@ -65,7 +61,6 @@ class SuggestBundlesArgs(BaseModel):
     products: List[ProductMetadata]
 
 
-# 🤖 Agent to decide whether a bundle should be offered
 should_offer_bundle_agent = Agent(
     name="should_offer_bundle_agent",
     model="gemini-2.0-flash",
@@ -74,7 +69,6 @@ should_offer_bundle_agent = Agent(
     instruction=upsell_instructions,
 )
 
-# 🤖 Agent to suggest bundle upsells
 suggest_bundle_agent = Agent(
     name="suggest_bundle_agent",
     model="gemini-2.0-flash",
@@ -83,7 +77,6 @@ suggest_bundle_agent = Agent(
     instruction=suggest_bundle_instructions,
     tools=[search_catalog_memory_tool])
 
-# 🔧 Tool exports for root agent
 should_offer_bundle_tool = AgentTool(agent=should_offer_bundle_agent)
 suggest_bundle_tool = AgentTool(agent=suggest_bundle_agent)
 find_product_id_by_name_tool = FunctionTool(func=find_product_id_by_name)

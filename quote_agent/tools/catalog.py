@@ -11,10 +11,8 @@ from google.adk.sessions import Session
 from google.adk.memory import InMemoryMemoryService
 from google.adk.memory.base_memory_service import MemoryResult
 
-# Long-term memory for catalog entries
 memory_service = InMemoryMemoryService()
 
-# Storefront GraphQL endpoint for BigCommerce
 STOREFRONT_GRAPHQL_ENDPOINT = f"https://store-{os.environ.get('BIGCOMMERCE_STORE_HASH', 'MISSING')}.mybigcommerce.com/graphql"
 
 
@@ -184,7 +182,6 @@ def ingest_catalog_to_memory(app_name: str, user_id: str, session_id: str):
     return {"status": "catalog_ingested", "entries": len(events)}
 
 
-# Expose as tools
 preload_customer_catalog_tool = FunctionTool(func=preload_customer_catalog)
 read_catalog_from_state_tool = FunctionTool(func=read_catalog_from_state)
 
