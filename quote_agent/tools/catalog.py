@@ -9,6 +9,7 @@ from google.adk.events import Event
 from google.genai.types import Content, Part
 from google.adk.sessions import Session
 from google.adk.memory import InMemoryMemoryService
+from google.adk.memory.base_memory_service import MemoryResult
 
 # Long-term memory for catalog entries
 memory_service = InMemoryMemoryService()
@@ -152,6 +153,10 @@ def read_catalog_from_state(tool_context: ToolContext) -> Content:
 def ingest_catalog_to_memory(app_name: str, user_id: str, session_id: str):
     catalog = _load_catalog_data()
     events = []
+    print(f"📦 Ingesting {len(catalog)} catalog entries into memory...")
+    print(
+        f"🔑 Using app_name={app_name}, user_id={user_id}, session_id={session_id}"
+    )
 
     for product in catalog:
         lines = [f"{product['name']}"]
@@ -168,7 +173,7 @@ def ingest_catalog_to_memory(app_name: str, user_id: str, session_id: str):
         content = Content(role="user", parts=[Part(text="\n".join(lines))])
         events.append(Event(author="catalog_ingest", content=content))
 
-    session = Session(id=f"catalog-{uuid.uuid4()}",
+    session = Session(id=session_id,
                       app_name=app_name,
                       user_id=user_id,
                       state={},
@@ -183,7 +188,53 @@ def ingest_catalog_to_memory(app_name: str, user_id: str, session_id: str):
 preload_customer_catalog_tool = FunctionTool(func=preload_customer_catalog)
 read_catalog_from_state_tool = FunctionTool(func=read_catalog_from_state)
 
+
+def search_catalog_memory(query: str) -> List[MemoryResult]:
+    print("🔍 [Memory Search] Searching catalog memory")
+    print(f"🔍 Query: {query}")
+
+    try:
+        results = memory_service.search_memory(
+            app_name="quote_agent",
+            user_id="user",
+            query=query,
+        )
+        if results and results.memories:
+            print(f"✅ Found {len(results.memories)} matching catalog items.")
+            return results.memories
+        print("⚠️ No results found.")
+    except Exception as e:
+        print(f"❌ Memory search failed: {e}")
+    return []
+
+
+search_catalog_memory_tool = FunctionTool(func=search_catalog_memory)
+
+
+def get_price_by_product_id(product_id: int,
+                            tool_context: ToolContext) -> dict:
+    catalog = tool_context.state.get("catalog", [])
+    product = next((p for p in catalog if p["id"] == product_id), None)
+
+    if not product:
+        return {
+            "status": "error",
+            "message": f"Product {product_id} not found in catalog."
+        }
+
+    return {
+        "status": "success",
+        "name": product["name"],
+        "price": product["price"],
+        "currency": product["currency"],
+        "sku": product["sku"]
+    }
+
+
+get_price_by_product_id_tool = FunctionTool(func=get_price_by_product_id)
+
 __all__ = [
     "preload_customer_catalog_tool", "read_catalog_from_state_tool",
-    "ingest_catalog_to_memory", "memory_service"
+    "ingest_catalog_to_memory", "search_catalog_memory_tool",
+    "get_price_by_product_id_tool"
 ]

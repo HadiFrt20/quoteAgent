@@ -16,40 +16,26 @@ CUSTOMER_ID = 25
 CHANNEL_ID = 1
 
 
-def deep_print(obj, indent=0, visited=None):
-    if visited is None:
-        visited = set()
-    
-    obj_id = id(obj)
-    if obj_id in visited:
-        return
-    
-    visited.add(obj_id)
-    spacer = "  " * indent
-    
-    if hasattr(obj, '__dict__'):
-        print(f"{spacer}{obj.__class__.__name__}:")
-        for key, value in vars(obj).items():
-            print(f"{spacer}  {key}: ", end="")
-            if isinstance(value,
-                          (int, float, str, list, dict, bool, type(None))):
-                print(value)
-            else:
-                print()
-                deep_print(value, indent + 2, visited)
-    else:
-        print(f"{spacer}{obj}")
+def get_session_from_callback(callback_context: CallbackContext):
+    """Safely extracts the Session object from CallbackContext."""
+    invocation_ctx = getattr(callback_context, "_invocation_context", None)
+    if not invocation_ctx:
+        print("⚠️ No _invocation_context found in CallbackContext.")
+        return None
+
+    session = getattr(invocation_ctx, "session", None)
+    if not session:
+        print("⚠️ No session found in invocation context.")
+        return None
+
+    return session
 
 
 def preload_agent_context(
     callback_context: CallbackContext, ) -> Optional[Content]:
     state = callback_context.state
 
-    print("\n--- Deep Dump of CallbackContext ---")
-    deep_print(callback_context)
-    print("--- End Dump ---\n")
-
-    # Load B2B Storefront token
+    # get a session specific B2B Storefront token
     print("🔑 Fetching B2B Storefront token...")
     try:
         res = requests.post(
@@ -98,7 +84,7 @@ def preload_agent_context(
 
     # Ingest catalog into memory using session metadata
     try:
-        session = getattr(callback_context, "session", None)
+        session = get_session_from_callback(callback_context)
         if session:
             ingest_catalog_to_memory(
                 app_name=session.app_name,

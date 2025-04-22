@@ -1,5 +1,6 @@
 from google.adk.agents import LlmAgent
 from quote_agent.prompts import intent_instructions
+from google.adk.agents.callback_context import CallbackContext
 
 INTENT_LABELS = [
     "order_reorder", "bundle_suggestion", "quote_request", "catalog_lookup",
