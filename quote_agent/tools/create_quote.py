@@ -65,7 +65,7 @@ def create_combined_quote_request_tool_func(products: List[dict], note: str,
 
         product_list.append({
             "productId": product_id,
-            "variantId": product_id,
+            #"variantId": product_id,
             "quantity": quantity,
             "basePrice": str(base_price),
             "discount": str(discount_amount),
